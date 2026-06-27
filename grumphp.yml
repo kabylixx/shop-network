@@ -1,0 +1,23 @@
+grumphp:
+    process_timeout: 120
+    # Generated git hooks run from the host, where PHP only exists inside the
+    # container: invoke GrumPHP through `docker compose exec`. The stack must be
+    # running when committing.
+    git_hook_variables:
+        EXEC_GRUMPHP_COMMAND: 'docker compose exec -T app php'
+    tasks:
+        phpcsfixer:
+            allow_risky: true
+            config: .php-cs-fixer.dist.php
+        phpstan:
+            configuration: phpstan.neon
+            use_grumphp_paths: false
+        git_commit_message:
+            allow_empty_message: false
+            enforce_capitalized_subject: false
+            enforce_no_subject_trailing_period: true
+            enforce_single_lined_subject: true
+            max_subject_width: 72
+            # Karma convention: type(scope optional): subject
+            matchers:
+                Karma convention: '/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?: .+/'
