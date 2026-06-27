@@ -3,6 +3,12 @@
 # Single FrankenPHP image (Caddy HTTP server + PHP 8.5 bundled).
 FROM dunglas/frankenphp:php8.5
 
+# System tools required by Composer/Symfony Flex (git for recipe sync, unzip
+# for dist package extraction).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 # Required PHP extensions: pdo_mysql (Doctrine/MySQL), intl (Serializer,
 # case/accent-insensitive normalization), opcache (performance). The
 # install-php-extensions helper ships with the FrankenPHP image.
