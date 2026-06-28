@@ -16,6 +16,7 @@ final readonly class ShopView
         public float $longitude,
         public string $managerId,
         public string $status,
+        public ?float $distance = null,
     ) {
     }
 
@@ -32,5 +33,18 @@ final readonly class ShopView
             (string) $shop->managerId(),
             $shop->status()->value,
         );
+    }
+
+    public static function fromRow(
+        string $id,
+        string $name,
+        string $address,
+        float $latitude,
+        float $longitude,
+        string $managerId,
+        string $status,
+        ?float $distance,
+    ): self {
+        return new self($id, $name, $address, $latitude, $longitude, $managerId, $status, $distance);
     }
 }
