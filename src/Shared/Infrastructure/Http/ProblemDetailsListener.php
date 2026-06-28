@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\Infrastructure\Http;
 
+use App\Shared\Domain\NotFoundException;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,8 +30,9 @@ final class ProblemDetailsListener
 
         $response = match (true) {
             null !== $validationFailure => $this->validationResponse($validationFailure),
-            $throwable instanceof SerializerException => $this->problem(Response::HTTP_BAD_REQUEST, 'The request body is malformed.'),
-            $throwable instanceof HttpExceptionInterface => $this->problem($throwable->getStatusCode(), $throwable->getMessage()),
+            $throwable instanceof NotFoundException => $this->problemResponse(Response::HTTP_NOT_FOUND, $throwable->getMessage()),
+            $throwable instanceof SerializerException => $this->problemResponse(Response::HTTP_BAD_REQUEST, 'The request body is malformed.'),
+            $throwable instanceof HttpExceptionInterface => $this->problemResponse($throwable->getStatusCode(), $throwable->getMessage()),
             default => null,
         };
 
@@ -66,7 +68,7 @@ final class ProblemDetailsListener
             ];
         }
 
-        return $this->problem(
+        return $this->problemResponse(
             Response::HTTP_UNPROCESSABLE_ENTITY,
             'The request payload failed validation.',
             ['violations' => $violations],
@@ -76,7 +78,7 @@ final class ProblemDetailsListener
     /**
      * @param array<string, mixed> $extensions
      */
-    private function problem(int $status, string $detail, array $extensions = []): JsonResponse
+    private function problemResponse(int $status, string $detail, array $extensions = []): JsonResponse
     {
         return new JsonResponse(
             [

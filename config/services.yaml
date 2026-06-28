@@ -28,6 +28,7 @@ services:
     # Write
     App\Catalog\Domain\ProductRepository: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductRepository'
     App\Network\Domain\ManagerRepository: '@App\Network\Infrastructure\Persistence\Doctrine\DoctrineManagerRepository'
+    App\Network\Domain\ShopRepository: '@App\Network\Infrastructure\Persistence\Doctrine\DoctrineShopRepository'
 
     # Read
     App\Catalog\Application\ProductFinder: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductFinder'

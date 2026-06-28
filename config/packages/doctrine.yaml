@@ -13,6 +13,7 @@ doctrine:
         types:
             product_id: App\Catalog\Infrastructure\Persistence\Doctrine\ProductIdType
             manager_id: App\Network\Infrastructure\Persistence\Doctrine\ManagerIdType
+            shop_id: App\Network\Infrastructure\Persistence\Doctrine\ShopIdType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore

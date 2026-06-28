@@ -140,6 +140,94 @@ correctes (pas d'erreur).
   bornes, `sort` non whitelisté). Le corps liste les `violations` comme pour la
   création.
 
+### `POST /api/managers` — Créer un gérant
+
+Enregistre un gérant, rattachable ensuite à une ou plusieurs boutiques.
+
+**Requête**
+
+```http
+POST /api/managers
+Content-Type: application/json
+
+{
+  "name": "Amélie Poulain"
+}
+```
+
+**Réponse `201 Created`**
+
+```json
+{
+  "id": "019f0fbb-99d7-7004-be48-1c77a6b3f41c",
+  "name": "Amélie Poulain"
+}
+```
+
+**Erreurs** — RFC 7807 :
+
+- `422 Unprocessable Content` — `name` vide ou supérieur à 150 caractères.
+- `400 Bad Request` — corps JSON malformé ou mal typé.
+
+### `POST /api/shops` — Créer une boutique
+
+Crée une boutique et l'associe à un gérant existant.
+
+**Corps de requête**
+
+| Champ       | Requis | Description                                                |
+| ----------- | ------ | ---------------------------------------------------------- |
+| `name`      | oui    | Nom de la boutique (≤ 150).                                |
+| `address`   | oui    | Adresse postale, texte libre (≤ 255).                      |
+| `latitude`  | oui    | Latitude, bornée à `[-90, 90]`.                            |
+| `longitude` | oui    | Longitude, bornée à `[-180, 180]`.                         |
+| `managerId` | oui    | UUID d'un gérant **existant**.                             |
+| `status`    | non    | `open` (défaut) ou `closed`.                               |
+
+**Requête**
+
+```http
+POST /api/shops
+Content-Type: application/json
+
+{
+  "name": "Boutique Marais",
+  "address": "12 rue de Rivoli, Paris",
+  "latitude": 48.8566,
+  "longitude": 2.3522,
+  "managerId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c"
+}
+```
+
+**Réponse `201 Created`**
+
+```json
+{
+  "id": "019f0fbb-99fe-790a-9ef8-415b9d7d7e22",
+  "name": "Boutique Marais",
+  "address": "12 rue de Rivoli, Paris",
+  "latitude": 48.8566,
+  "longitude": 2.3522,
+  "managerId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c",
+  "status": "open"
+}
+```
+
+La boutique référence son gérant **par identifiant** (pas d'association ORM) ;
+les coordonnées sont portées par un Value Object `Coordinates` qui garantit ses
+bornes comme invariant de domaine, en plus de la validation HTTP.
+
+**Erreurs** — RFC 7807 :
+
+- `422 Unprocessable Content` — champ requis manquant, coordonnées hors bornes,
+  `managerId` non conforme à un UUID, `status` hors liste.
+- `404 Not Found` — `managerId` syntaxiquement valide mais inexistant.
+- `400 Bad Request` — corps JSON malformé.
+
+La validation prime sur l'existence : une requête combinant des coordonnées hors
+bornes **et** un `managerId` inconnu renvoie `422` (la validation s'exécute avant
+le contrôle d'existence).
+
 ## Qualité
 
 - **Tests** : `make test` (PHPUnit ; base de test isolée par transaction via
@@ -161,6 +249,25 @@ des read models `ProductView` sans hydrater l'agrégat, tandis que l'écriture
 conserve son propre `ProductRepository` (couche Domain). La pagination est
 mutualisée dans `Shared` (`Pagination` / `Paginated`), réutilisable par les
 prochains listings (boutiques, stock).
+
+Côté **module `Network`**, une boutique référence son gérant **par identifiant**
+(`ManagerId`), sans association Doctrine : les agrégats sont des frontières de
+cohérence indépendantes, on ne traverse pas l'un pour charger l'autre. Le
+contrôle d'existence du gérant vit donc dans le handler (`exists()` sur le port
+d'écriture), ce qui permet de renvoyer un **`404`** explicite — là où une clé
+étrangère aurait produit un `500`. Pour mapper ce cas sans coupler la couche
+Application à HTTP, une exception domaine implémente le marqueur partagé
+`Shared\Domain\NotFound`, que le listener Problem Details traduit en `404`.
+
+**`address` est un `string`, pas un Value Object.** Un VO se justifie quand il
+protège un invariant ou regroupe des champs cohérents : c'est le cas de
+`Coordinates` (couple latitude/longitude + bornes), ce ne l'est pas d'une adresse
+en texte libre, dont la seule règle (longueur) est déjà couverte par la
+validation HTTP et la colonne. L'emballer dans un VO mono-champ serait de la
+cérémonie sans garantie supplémentaire — au même titre que `name` reste un
+`string`. Le jour où l'adresse deviendrait structurée (rue / ville / code postal
+/ pays) ou nécessiterait une normalisation ou un géocodage, la promotion en VO se
+justifierait ; ce besoin n'existe pas à ce stade.
 
 Cette section sera complétée au fil des user stories.
 

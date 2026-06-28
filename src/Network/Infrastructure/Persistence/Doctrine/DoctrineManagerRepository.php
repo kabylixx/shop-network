@@ -27,7 +27,7 @@ final readonly class DoctrineManagerRepository implements ManagerRepository
             ->select('COUNT(m.id)')
             ->from(Manager::class, 'm')
             ->where('m.id = :id')
-            ->setParameter('id', $id)
+            ->setParameter('id', $id, ManagerIdType::NAME)
             ->getQuery()
             ->getSingleScalarResult();
 
