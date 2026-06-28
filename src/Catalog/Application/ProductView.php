@@ -23,4 +23,9 @@ final readonly class ProductView
             $product->pictureUrl(),
         );
     }
+
+    public static function fromRow(string $id, string $name, string $pictureUrl): self
+    {
+        return new self($id, $name, $pictureUrl);
+    }
 }
