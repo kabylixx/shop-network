@@ -12,12 +12,15 @@ grumphp:
         phpstan:
             configuration: phpstan.neon
             use_grumphp_paths: false
+            memory_limit: '512M'
+        deptrac:
+            depfile: deptrac.yaml
         git_commit_message:
             allow_empty_message: false
             enforce_capitalized_subject: false
             enforce_no_subject_trailing_period: true
             enforce_single_lined_subject: true
-            max_subject_width: 72
+            max_subject_width: 150
             # Karma convention: type(scope optional): subject
             matchers:
                 Karma convention: '/^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?: .+/'

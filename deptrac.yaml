@@ -1,0 +1,28 @@
+deptrac:
+  paths:
+    - ./src
+  layers:
+    # Hexagonal layers, matched across every module (Catalog, Network, Inventory, Shared).
+    - name: Domain
+      collectors:
+        - type: directory
+          value: src/[^/]+/Domain/.*
+    - name: Application
+      collectors:
+        - type: directory
+          value: src/[^/]+/Application/.*
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: src/[^/]+/Infrastructure/.*
+  ruleset:
+    # Domain is the core: it depends on nothing but itself (and vendor types,
+    # which Deptrac ignores as they belong to no layer).
+    Domain: ~
+    # Application orchestrates the Domain.
+    Application:
+      - Domain
+    # Infrastructure (Doctrine adapters, HTTP actions) wires everything together.
+    Infrastructure:
+      - Domain
+      - Application
