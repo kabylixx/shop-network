@@ -7,17 +7,24 @@ doctrine:
         #server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
+
+        # Typed aggregate identities (one Doctrine type per aggregate id VO),
+        # all stored as BINARY(16) via symfony/uid's AbstractUidType.
+        types:
+            product_id: App\Catalog\Infrastructure\Persistence\Doctrine\ProductIdType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
-        auto_mapping: true
+        # One mapping per module: Doctrine only scans each module's Domain
+        # layer, making the bounded context's boundaries explicit in config.
+        auto_mapping: false
         mappings:
-            App:
+            Catalog:
                 type: attribute
                 is_bundle: false
-                dir: '%kernel.project_dir%/src/Entity'
-                prefix: 'App\Entity'
-                alias: App
+                dir: '%kernel.project_dir%/src/Catalog/Domain'
+                prefix: 'App\Catalog\Domain'
+                alias: Catalog
 
 when@test:
     doctrine:
