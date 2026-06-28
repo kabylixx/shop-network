@@ -24,7 +24,7 @@ les dépendances et applique les migrations. L'API est alors disponible sur
 | `make start`           | Build + up + install + migrate (démarrage complet)         |
 | `make test`            | Prépare la base de test puis lance la suite PHPUnit        |
 | `make migrate`         | Applique les migrations Doctrine                           |
-| `make fixtures`        | Charge les données de démo (à venir avec les US suivantes) |
+| `make fixtures`        | Charge les données de démo (catalogue façon Sézane)        |
 | `make clear-cache`     | Vide le cache Symfony (env dev)                            |
 | `make clear-testcache` | Vide le cache Symfony (env test)                           |
 | `make down`            | Arrête et supprime les conteneurs                          |
@@ -85,6 +85,61 @@ Object d'identité typé (`ProductId`) et généré par la couche application.
 }
 ```
 
+### `GET /api/products` — Lister le catalogue
+
+Renvoie le catalogue paginé, avec recherche par nom et tri.
+
+**Paramètres de requête** (tous optionnels)
+
+| Param       | Défaut | Description                                                        |
+| ----------- | ------ | ------------------------------------------------------------------ |
+| `page`      | `1`    | Numéro de page (≥ 1).                                              |
+| `limit`     | `20`   | Taille de page (1 à 100).                                          |
+| `search`    | —      | Filtre par nom, **partiel**, insensible à la casse et aux accents. |
+| `sort`      | `name` | Champ de tri (`name`).                                             |
+| `direction` | `asc`  | Sens du tri (`asc` ou `desc`).                                     |
+
+La recherche insensible aux accents/casse est assurée nativement par la
+collation `utf8mb4_0900_ai_ci` de MySQL (pas de colonne normalisée).
+
+**Requête**
+
+```http
+GET /api/products?search=robe&sort=name&direction=desc&page=1&limit=20
+```
+
+**Réponse `200 OK`**
+
+```json
+{
+  "items": [
+    {
+      "id": "019f0f3c-ea98-7727-9d42-f4724f489ff4",
+      "name": "Robe Sandy",
+      "pictureUrl": "https://media.sezane.com/products/robe-sandy.jpg"
+    },
+    {
+      "id": "019f0f3c-ea9a-7c98-a5f8-7109e2b6b40e",
+      "name": "Robe Andy",
+      "pictureUrl": "https://media.sezane.com/products/robe-andy.jpg"
+    }
+  ],
+  "page": 1,
+  "limit": 20,
+  "total": 2,
+  "totalPages": 1
+}
+```
+
+Une page au-delà de la dernière renvoie `items: []` avec les métadonnées
+correctes (pas d'erreur).
+
+**Erreurs** — au format RFC 7807 :
+
+- `422 Unprocessable Content` — paramètre invalide (`page < 1`, `limit` hors
+  bornes, `sort` non whitelisté). Le corps liste les `violations` comme pour la
+  création.
+
 ## Qualité
 
 - **Tests** : `make test` (PHPUnit ; base de test isolée par transaction via
@@ -99,6 +154,14 @@ Les choix d'architecture (hexagonale pragmatique, identités typées par agréga
 — `ProductId` & co — en UUID v7 via `symfony/uid`, mapping Doctrine par module,
 réponses en représentation maîtrisée, erreurs RFC 7807) et les hypothèses de
 cadrage sont détaillés dans l'étude du projet.
+
+Côté **lecture**, le listing suit une approche **CQRS-light** : un port de
+lecture dédié (`ProductFinder`, dans la couche Application) renvoie directement
+des read models `ProductView` sans hydrater l'agrégat, tandis que l'écriture
+conserve son propre `ProductRepository` (couche Domain). La pagination est
+mutualisée dans `Shared` (`Pagination` / `Paginated`), réutilisable par les
+prochains listings (boutiques, stock).
+
 Cette section sera complétée au fil des user stories.
 
 ## Évolutions possibles

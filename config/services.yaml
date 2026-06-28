@@ -25,4 +25,8 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    # Write
     App\Catalog\Domain\ProductRepository: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductRepository'
+
+    # Read
+    App\Catalog\Application\ProductFinder: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductFinder'

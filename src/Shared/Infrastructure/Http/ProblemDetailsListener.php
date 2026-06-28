@@ -25,9 +25,10 @@ final class ProblemDetailsListener
     public function __invoke(ExceptionEvent $event): void
     {
         $throwable = $event->getThrowable();
+        $validationFailure = $this->validationFailure($throwable);
 
         $response = match (true) {
-            $throwable instanceof ValidationFailedException => $this->validationResponse($throwable),
+            null !== $validationFailure => $this->validationResponse($validationFailure),
             $throwable instanceof SerializerException => $this->problem(Response::HTTP_BAD_REQUEST, 'The request body is malformed.'),
             $throwable instanceof HttpExceptionInterface => $this->problem($throwable->getStatusCode(), $throwable->getMessage()),
             default => null,
@@ -36,6 +37,22 @@ final class ProblemDetailsListener
         if (null !== $response) {
             $event->setResponse($response);
         }
+    }
+
+    /**
+     * Extracts the validation failure whether it was thrown directly (manual
+     * validate()) or wrapped by an argument resolver such as #[MapQueryString],
+     * which nests it as the previous exception.
+     */
+    private function validationFailure(\Throwable $throwable): ?ValidationFailedException
+    {
+        if ($throwable instanceof ValidationFailedException) {
+            return $throwable;
+        }
+
+        $previous = $throwable->getPrevious();
+
+        return $previous instanceof ValidationFailedException ? $previous : null;
     }
 
     private function validationResponse(ValidationFailedException $exception): JsonResponse
