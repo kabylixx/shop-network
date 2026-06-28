@@ -1,4 +1,7 @@
 {
+    "dama/doctrine-test-bundle": {
+        "version": "v8.6.0"
+    },
     "deptrac/deptrac": {
         "version": "4.6.1"
     },
@@ -158,6 +161,15 @@
             "config/packages/routing.yaml",
             "config/routes.yaml"
         ]
+    },
+    "symfony/uid": {
+        "version": "8.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "7.0",
+            "ref": "0df5844274d871b37fc3816c57a768ffc60a43a5"
+        }
     },
     "symfony/validator": {
         "version": "8.1",

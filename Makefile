@@ -3,7 +3,7 @@ EXEC = $(DC) exec app
 PHP  = $(EXEC) php bin/console
 
 .DEFAULT_GOAL := help
-.PHONY: help start up down build install migrate fixtures test sh
+.PHONY: help start up down build install migrate fixtures test test-db clear-cache clear-testcache sh
 
 help: ## List the available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -29,7 +29,17 @@ migrate: ## Run Doctrine migrations
 fixtures: ## Load demo fixtures
 	$(PHP) doctrine:fixtures:load --no-interaction
 
-test: ## Run the PHPUnit test suite
+clear-cache: ## Clear the Symfony cache (dev)
+	$(PHP) cache:clear
+
+clear-testcache: ## Clear the Symfony cache (test)
+	$(PHP) cache:clear --env=test
+
+test-db: ## Create the test database schema
+	$(PHP) doctrine:database:create --env=test --if-not-exists --no-interaction
+	$(PHP) doctrine:migrations:migrate --env=test --no-interaction --allow-no-migration
+
+test: test-db ## Run the PHPUnit test suite (prepares the test DB first)
 	$(EXEC) vendor/bin/phpunit
 
 sh: ## Open a shell inside the application container
