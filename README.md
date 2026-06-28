@@ -228,6 +228,67 @@ La validation prime sur l'existence : une requête combinant des coordonnées ho
 bornes **et** un `managerId` inconnu renvoie `422` (la validation s'exécute avant
 le contrôle d'existence).
 
+### `GET /api/shops` — Rechercher des boutiques
+
+Recherche paginée par **nom** et/ou **proximité géographique**. Les boutiques
+`closed` sont exclues des résultats. La distance est calculée côté base par
+`ST_Distance_Sphere` (distance sphérique, en mètres).
+
+**Paramètres de requête** (tous optionnels)
+
+| Param    | Défaut | Description                                                        |
+| -------- | ------ | ------------------------------------------------------------------ |
+| `page`   | `1`    | Numéro de page (≥ 1).                                              |
+| `limit`  | `20`   | Taille de page (1 à 100).                                          |
+| `search` | —      | Filtre par nom, **partiel**, insensible à la casse et aux accents. |
+| `lat`    | —      | Latitude du centre de recherche, bornée à `[-90, 90]`.            |
+| `lng`    | —      | Longitude du centre de recherche, bornée à `[-180, 180]`.         |
+| `radius` | —      | Rayon de recherche **en mètres** (> 0).                            |
+
+`lat`, `lng` et `radius` forment un **trio tout-ou-rien** : fournir l'un sans les
+autres renvoie `422` (un rayon n'a pas de sens sans centre, et inversement).
+
+- **Sans géolocalisation** → tri par nom croissant ; le champ `distance` vaut
+  `null`.
+- **Avec géolocalisation** → seules les boutiques **dans le rayon** sont
+  renvoyées, triées de la **plus proche à la plus éloignée**, et chaque résultat
+  porte sa `distance` au centre (en mètres). `search` se combine au filtre géo.
+
+**Requête**
+
+```http
+GET /api/shops?search=marais&lat=48.8566&lng=2.3522&radius=50000&page=1&limit=20
+```
+
+**Réponse `200 OK`**
+
+```json
+{
+  "items": [
+    {
+      "id": "019f0fbb-99fe-790a-9ef8-415b9d7d7e22",
+      "name": "Paris Marais",
+      "address": "12 rue de Rivoli, 75004 Paris",
+      "latitude": 48.8559,
+      "longitude": 2.3601,
+      "managerId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c",
+      "status": "open",
+      "distance": 583.2
+    }
+  ],
+  "page": 1,
+  "limit": 20,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+**Erreurs** — RFC 7807 :
+
+- `422 Unprocessable Content` — trio géo incomplet, coordonnées hors bornes,
+  `radius` ≤ 0, `page`/`limit` invalides, `search` trop long. Le corps liste les
+  `violations` comme pour la création.
+
 ## Qualité
 
 - **Tests** : `make test` (PHPUnit ; base de test isolée par transaction via
@@ -256,8 +317,23 @@ cohérence indépendantes, on ne traverse pas l'un pour charger l'autre. Le
 contrôle d'existence du gérant vit donc dans le handler (`exists()` sur le port
 d'écriture), ce qui permet de renvoyer un **`404`** explicite — là où une clé
 étrangère aurait produit un `500`. Pour mapper ce cas sans coupler la couche
-Application à HTTP, une exception domaine implémente le marqueur partagé
-`Shared\Domain\NotFound`, que le listener Problem Details traduit en `404`.
+Application à HTTP, une exception domaine étend le marqueur partagé
+`Shared\Domain\NotFoundException`, que le listener Problem Details traduit en
+`404`.
+
+**Recherche géolocalisée — `ST_Distance_Sphere` en requête SQL native.** La
+lecture suit le même CQRS-light : un port `ShopFinder` (Application) renvoie des
+`ShopView` enrichis d'une `distance`, sans hydrater l'agrégat `Shop`. Le calcul
+de distance, le filtre par rayon et le tri sont délégués à MySQL —
+`ST_Distance_Sphere(POINT(longitude, latitude), POINT(:lng, :lat))` —, **source
+unique de vérité** : aucune formule de distance n'est dupliquée en PHP. Le centre
+et le rayon de recherche sont portés par un Value Object `SearchArea` (centre
+`Coordinates` + rayon en mètres), qui rend l'état illégal « centre sans rayon »
+non représentable et garantit ses invariants (bornes, rayon > 0) en amont.
+*Limitation assumée* : `latitude`/`longitude` étant stockées en colonnes
+scalaires, `POINT()` est construit par ligne → **full scan** (sans index
+spatial). C'est optimal à l'échelle visée (centaines à milliers de boutiques) ;
+le passage à l'échelle est traité en évolutions.
 
 **`address` est un `string`, pas un Value Object.** Un VO se justifie quand il
 protège un invariant ou regroupe des champs cohérents : c'est le cas de
@@ -295,3 +371,14 @@ Cette section sera complétée au fil des user stories.
   dictionnaire d'erreurs côté front** (mapping direct code → message localisé).
   Mise en œuvre : dériver un code lisible du type de contrainte dans le listener,
   avec surcharge possible par champ via l'option `payload` des contraintes.
+- **Index spatial pour la recherche géo à grand volume** — la requête actuelle
+  (`ST_Distance_Sphere` sur colonnes `latitude`/`longitude` scalaires) fait un
+  full scan, sans coût perceptible à l'échelle visée. Pour de très gros volumes,
+  on ajouterait une colonne `POINT SRID 4326` avec **index spatial** et un
+  pré-filtre par *bounding box* (`MBRContains`) avant le calcul exact de
+  distance, voire un passage à **PostGIS** (`geography` + index GiST). Évolution
+  isolée à l'infrastructure : le port `ShopFinder` et le domaine sont inchangés.
+- **Recherche par adresse (géocodage)** — la saisie brute de `lat`/`lng` est peu
+  pratique pour un humain. Un service de géocodage (adresse → coordonnées) côté
+  serveur permettrait une recherche « près de telle adresse », en réutilisant
+  tel quel le filtre géographique existant.
