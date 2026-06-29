@@ -29,6 +29,11 @@ services:
     App\Catalog\Domain\ProductRepository: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductRepository'
     App\Network\Domain\ManagerRepository: '@App\Network\Infrastructure\Persistence\Doctrine\DoctrineManagerRepository'
     App\Network\Domain\ShopRepository: '@App\Network\Infrastructure\Persistence\Doctrine\DoctrineShopRepository'
+    App\Inventory\Domain\StockRepository: '@App\Inventory\Infrastructure\Persistence\Doctrine\DoctrineStockRepository'
+
+    # Inventory cross-module existence ports
+    App\Inventory\Application\ProductExistence: '@App\Inventory\Infrastructure\Persistence\Doctrine\DbalProductExistence'
+    App\Inventory\Application\ShopExistence: '@App\Inventory\Infrastructure\Persistence\Doctrine\DbalShopExistence'
 
     # Read
     App\Catalog\Application\ProductCatalog: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductCatalog'

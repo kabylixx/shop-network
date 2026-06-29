@@ -289,6 +289,55 @@ GET /api/shops?search=marais&lat=48.8566&lng=2.3522&radius=50000&page=1&limit=20
   `radius` ≤ 0, `page`/`limit` invalides, `search` trop long. Le corps liste les
   `violations` comme pour la création.
 
+### `PUT /api/products/{id}/stock` — Renseigner le stock d'un produit
+
+Met à jour, pour un produit, la quantité disponible dans une ou plusieurs
+boutiques. Sémantique **upsert par couple `(boutique, produit)`** : chaque ligne
+du corps crée ou remplace la quantité du couple ; les boutiques **absentes** du
+corps conservent leur stock. L'opération est **tout-ou-rien** (un identifiant
+inconnu rejette toute la requête, aucune écriture partielle).
+
+`{id}` est l'UUID d'un produit **existant** (contraint au niveau du routage : un
+identifiant non conforme à un UUID renvoie `404`).
+
+**Corps de requête** — tableau JSON de couples :
+
+| Champ      | Requis | Description                                       |
+| ---------- | ------ | ------------------------------------------------- |
+| `shopId`   | oui    | UUID d'une boutique **existante**, unique par requête. |
+| `quantity` | oui    | Entier ≥ 0 (`0` = produit référencé en rupture).  |
+
+**Requête**
+
+```http
+PUT /api/products/019f0fbb-99fe-790a-9ef8-415b9d7d7e22/stock
+Content-Type: application/json
+
+[
+  { "shopId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c", "quantity": 12 },
+  { "shopId": "019f0fbb-9a1b-71c2-be48-1c77a6b3f41c", "quantity": 0 }
+]
+```
+
+**Réponse `200 OK`** — écho des couples upsertés (le produit est dans l'URL) :
+
+```json
+[
+  { "shopId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c", "quantity": 12 },
+  { "shopId": "019f0fbb-9a1b-71c2-be48-1c77a6b3f41c", "quantity": 0 }
+]
+```
+
+**Erreurs** — RFC 7807 :
+
+- `422 Unprocessable Content` — `quantity` < 0, `shopId` non conforme à un UUID,
+  champ manquant, ou même boutique répétée dans le corps. Le corps liste les
+  `violations`, avec un chemin par ligne (ex. `lines[0].quantity`).
+- `404 Not Found` — produit inconnu, ou au moins une boutique inconnue.
+- `400 Bad Request` — corps JSON malformé.
+
+La validation prime sur l'existence (même règle que la création de boutique).
+
 ## Qualité
 
 - **Tests** : `make test` (PHPUnit ; base de test isolée par transaction via
@@ -345,6 +394,26 @@ cérémonie sans garantie supplémentaire — au même titre que `name` reste un
 / pays) ou nécessiterait une normalisation ou un géocodage, la promotion en VO se
 justifierait ; ce besoin n'existe pas à ce stade.
 
+**Module `Inventory` — `Stock` est un agrégat à part, référencé par identité.**
+Une boutique peut détenir des milliers de lignes de stock : les charger avec
+l'agrégat `Shop` serait néfaste pour la perf et la cohérence. `Stock` est donc un
+agrégat indépendant qui référence `Product` et `Shop` **par leur identité**
+(`ProductId`, `ShopId`) — règle des petits agrégats référencés par identité. Il
+porte un identifiant propre (`StockId`) et garantit l'unicité du couple
+`(shop, product)` via une contrainte d'unicité en base ; la quantité est un Value
+Object `Quantity` (≥ 0, `0` = rupture). L'écriture est un **upsert par couple**
+dans une seule transaction.
+
+Le contrôle d'existence inter-module suit l'inversion de dépendances : plutôt que
+de dépendre des modules `Catalog`/`Network`, `Inventory` **déclare ses propres
+ports** (`ProductExistence`, `ShopExistence`) dans sa couche Application —
+prolongement du choix fait pour `ShopFinder`. Leurs adapters interrogent les
+tables `product`/`shop` en SQL natif (`ShopExistence` en **lot** pour N boutiques
+en une requête) : le couplage se réduit au **schéma partagé** (un nom de table),
+isolé dans un adapter, sans aucune dépendance de classe entre modules. Comme pour
+le gérant, l'absence de clé étrangère est compensée par ce contrôle dans le
+handler, qui renvoie un `404` explicite au lieu d'un `500`.
+
 Cette section sera complétée au fil des user stories.
 
 ## Évolutions possibles
@@ -382,3 +451,10 @@ Cette section sera complétée au fil des user stories.
   pratique pour un humain. Un service de géocodage (adresse → coordonnées) côté
   serveur permettrait une recherche « près de telle adresse », en réutilisant
   tel quel le filtre géographique existant.
+- **Contrôle d'existence inter-module via un contrat publié** — `Inventory`
+  vérifie aujourd'hui l'existence d'un produit / d'une boutique en interrogeant
+  directement leurs tables (couplage limité au schéma). Si les modules devaient
+  être davantage isolés (déploiements séparés, base par module), le module
+  propriétaire publierait un **port de lecture dédié** (ex. `Catalog` exposant un
+  contrat `ProductExistence`), consommé par `Inventory` — supprimant le partage de
+  schéma au profit d'un contrat applicatif explicite.
