@@ -50,14 +50,17 @@ class NetworkFixtures extends Fixture
         }
 
         foreach (self::SHOPS as $shop) {
-            $manager->persist(Shop::create(
+            $entity = Shop::create(
                 ShopId::generate(),
                 $shop['name'],
                 $shop['address'],
                 new Coordinates($shop['lat'], $shop['lng']),
                 $managerIds[$shop['manager']],
                 $shop['status'],
-            ));
+            );
+
+            $manager->persist($entity);
+            $this->addReference($shop['name'], $entity);
         }
 
         $manager->flush();

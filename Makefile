@@ -3,13 +3,16 @@ EXEC = $(DC) exec app
 PHP  = $(EXEC) php bin/console
 
 .DEFAULT_GOAL := help
-.PHONY: help start up down build install migrate fixtures test test-db clear-cache clear-testcache sh
+.PHONY: help start demo up down build install migrate fixtures test test-db clear-cache clear-testcache sh
 
 help: ## List the available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 start: up install migrate ## One-command startup: build + up + install + migrate
 	@echo "✅ Stack ready: http://localhost:8080"
+
+demo: start fixtures ## One-command startup with demo data (start + fixtures)
+	@echo "✅ Stack ready with demo data: http://localhost:8080"
 
 up: ## Start the stack (build if needed)
 	$(DC) up -d --build
