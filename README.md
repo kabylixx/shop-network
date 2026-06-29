@@ -390,6 +390,17 @@ GET /api/stock?shopIds=019f0fbb-99d7-7004-be48-1c77a6b3f41c,019f0fbb-9a1b-71c2-b
 - `422 Unprocessable Content` — un `shopIds` non conforme à un UUID, `page`/`limit`
   invalides.
 
+### `GET /api/shops/{id}/products` — Produits d'une boutique
+
+Stock d'**une** boutique, vu comme une ressource. Même représentation et mêmes
+options (`includeOutOfStock`, `page`, `limit`) que `GET /api/stock`. Contrairement
+au filtre tolérant de `/api/stock`, cet endpoint adresse une boutique précise :
+un `{id}` non conforme à un UUID **ou** une boutique inexistante renvoie `404`.
+
+```http
+GET /api/shops/019f0fbb-99d7-7004-be48-1c77a6b3f41c/products
+```
+
 ## Qualité
 
 - **Tests** : `make test` (PHPUnit ; base de test isolée par transaction via
@@ -473,9 +484,11 @@ table** — comme les adapters d'existence (couplage limité au schéma, sans
 dépendance de classe Catalog). Point d'attention métier : le résultat est
 **ventilé par boutique, jamais sommé** — un produit présent dans deux boutiques
 donne deux lignes distinctes (un `GROUP BY product + SUM(quantity)` aurait été un
-contresens vis-à-vis du besoin « détail par boutique »). Le filtre `shopIds` de
-`GET /api/stock` est **tolérant** : une boutique inconnue ne matche rien, comme un
-`WHERE shop_id IN (...)`.
+contresens vis-à-vis du besoin « détail par boutique »). Les deux routes sont
+**deux use cases distincts** partageant le `StockFinder` : `GetStockByShops`
+(`/api/stock`) est un **filtre tolérant** (boutique inconnue ignorée, comme un
+`WHERE shop_id IN (...)`), tandis que `GetShopProducts` (`/api/shops/{id}/products`)
+traite la boutique comme une **ressource** et exige son existence (`404` sinon).
 
 Cette section sera complétée au fil des user stories.
 
