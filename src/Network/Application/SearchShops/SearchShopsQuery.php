@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Network\Application\SearchShops;
 
 use App\Shared\Application\Pagination;
+use App\Shared\Domain\SearchArea;
 
 final readonly class SearchShopsQuery
 {

@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Network\Domain;
+namespace App\Shared\Domain;
 
+/**
+ * Geographic point. A pure value object with bounded latitude/longitude,
+ * shared across modules — Network stores a shop's location, Inventory uses it as
+ * the center of an availability search.
+ */
 final readonly class Coordinates
 {
     public function __construct(

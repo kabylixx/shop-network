@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Network\Application\SearchShops;
-
-use App\Network\Domain\Coordinates;
+namespace App\Shared\Domain;
 
 /**
- * Read criterion: the disk to search within — a center and a radius in meters.
+ * The geographic disk to search within — a center and a radius in meters.
  * Center and radius are meaningless apart, so they travel together as a single
- * value; an instance is always a complete, valid search area.
+ * value; an instance is always a complete, valid area.
  */
 final readonly class SearchArea
 {

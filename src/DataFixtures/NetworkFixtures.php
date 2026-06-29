@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Network\Domain\Coordinates;
 use App\Network\Domain\Manager;
 use App\Network\Domain\ManagerId;
 use App\Network\Domain\Shop;
 use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopStatus;
+use App\Shared\Domain\Coordinates;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 

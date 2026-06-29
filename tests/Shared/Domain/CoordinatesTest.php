@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Network\Domain;
+namespace App\Tests\Shared\Domain;
 
-use App\Network\Domain\Coordinates;
+use App\Shared\Domain\Coordinates;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
