@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Network\Application\CreateShop;
 
-use App\Network\Domain\Coordinates;
 use App\Network\Domain\ManagerId;
 use App\Network\Domain\ManagerNotFoundException;
 use App\Network\Domain\ManagerRepository;
@@ -12,6 +11,7 @@ use App\Network\Domain\Shop;
 use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopRepository;
 use App\Network\Domain\ShopStatus;
+use App\Shared\Domain\Coordinates;
 
 final readonly class CreateShopCommandHandler
 {

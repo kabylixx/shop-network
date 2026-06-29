@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Network\Domain;
 
-use App\Network\Domain\Coordinates;
 use App\Network\Domain\ManagerId;
 use App\Network\Domain\Shop;
 use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopStatus;
+use App\Shared\Domain\Coordinates;
 use PHPUnit\Framework\TestCase;
 
 final class ShopTest extends TestCase

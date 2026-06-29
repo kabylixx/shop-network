@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Network\Infrastructure\Http;
 
-use App\Network\Application\SearchShops\SearchArea;
 use App\Network\Application\SearchShops\SearchShopsQuery;
 use App\Network\Application\SearchShops\SearchShopsQueryHandler;
-use App\Network\Domain\Coordinates;
 use App\Shared\Application\Pagination;
+use App\Shared\Domain\Coordinates;
+use App\Shared\Domain\SearchArea;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;

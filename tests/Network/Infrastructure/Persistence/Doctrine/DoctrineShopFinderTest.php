@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Network\Infrastructure\Persistence\Doctrine;
 
-use App\Network\Application\SearchShops\SearchArea;
 use App\Network\Application\SearchShops\SearchShopsQuery;
 use App\Network\Application\ShopFinder;
 use App\Network\Application\ShopView;
-use App\Network\Domain\Coordinates;
 use App\Network\Domain\Manager;
 use App\Network\Domain\ManagerId;
 use App\Network\Domain\Shop;
 use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopStatus;
 use App\Shared\Application\Pagination;
+use App\Shared\Domain\Coordinates;
+use App\Shared\Domain\SearchArea;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
