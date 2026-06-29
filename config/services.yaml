@@ -38,3 +38,4 @@ services:
     # Read
     App\Catalog\Application\ProductFinder: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductFinder'
     App\Network\Application\ShopFinder: '@App\Network\Infrastructure\Persistence\Doctrine\DoctrineShopFinder'
+    App\Inventory\Application\StockFinder: '@App\Inventory\Infrastructure\Persistence\Doctrine\DoctrineStockFinder'
