@@ -52,6 +52,7 @@ paramètres, codes, exemples requête/réponse) est dans la **[référence API](
 | `PUT` | `/api/products/{id}/stock` | Renseigner le stock d'un produit |
 | `GET` | `/api/stock` | Afficher / filtrer le stock par boutique(s) |
 | `GET` | `/api/shops/{id}/products` | Produits d'une boutique |
+| `GET` | `/api/products/{id}/availability` | Disponibilité d'un produit en boutique (nom + géolocalisation) |
 
 → **Détail complet : [`docs/api.md`](docs/api.md)**
 
@@ -77,8 +78,9 @@ par Deptrac).
   étrangère).
 - **CQRS-light** : l'écriture passe par un *repository* (Domain) qui hydrate
   l'agrégat ; la lecture par un *finder* (Application) qui renvoie des **read
-  models** (`ProductView`, `ShopView`, `StockView`), avec pagination mutualisée
-  dans `Shared`.
+  models** (`ProductView`, `ShopView`, `StockView`, `AvailabilityView`), avec
+  pagination mutualisée dans `Shared`. Certaines lectures **composent plusieurs
+  modules** (ex. disponibilité d'un produit en boutique).
 - **Recherche géo** déléguée à MySQL (`ST_Distance_Sphere`), **source unique de
   vérité** ; recherche par nom insensible aux accents/casse via la collation
   MySQL — aucune extension, aucune lib spatiale.
@@ -90,7 +92,7 @@ par Deptrac).
 ### Pour aller plus loin
 
 - **Décisions d'architecture** — le *pourquoi* de chaque choix (et les
-  alternatives écartées) est consigné en [ADR](docs/adr/) : 8 décisions, classées
+  alternatives écartées) est consigné en [ADR](docs/adr/) : 9 décisions, classées
   par ordre d'apparition dans le développement.
 - **Évolutions possibles** — auth/`Identity`, command bus, i18n des erreurs, index
   spatial / PostGIS, géocodage par adresse… sont détaillées dans la

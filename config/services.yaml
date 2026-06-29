@@ -39,3 +39,4 @@ services:
     App\Catalog\Application\ProductCatalog: '@App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductCatalog'
     App\Network\Application\ShopFinder: '@App\Network\Infrastructure\Persistence\Doctrine\DoctrineShopFinder'
     App\Inventory\Application\StockFinder: '@App\Inventory\Infrastructure\Persistence\Doctrine\DoctrineStockFinder'
+    App\Inventory\Application\ProductAvailabilityFinder: '@App\Inventory\Infrastructure\Persistence\Doctrine\DoctrineProductAvailabilityFinder'

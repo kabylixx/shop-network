@@ -13,7 +13,7 @@ réfèrent que pour leurs spécificités.
 - [Conventions communes](#conventions-communes) — pagination, erreurs (RFC 7807)
 - [Catalogue](#catalogue) — `POST /api/products`, `GET /api/products`
 - [Réseau de boutiques](#réseau-de-boutiques) — `POST /api/managers`, `POST /api/shops`, `GET /api/shops`
-- [Stock](#stock) — `PUT /api/products/{id}/stock`, `GET /api/stock`, `GET /api/shops/{id}/products`
+- [Stock](#stock) — `PUT /api/products/{id}/stock`, `GET /api/stock`, `GET /api/shops/{id}/products`, `GET /api/products/{id}/availability`
 
 ## Conventions communes
 
@@ -363,3 +363,61 @@ GET /api/shops/019f0fbb-99d7-7004-be48-1c77a6b3f41c/products
 **`200 OK`** : même enveloppe que `GET /api/stock`.
 
 **Erreurs** : `404` (`{id}` non conforme à un UUID, ou boutique inexistante).
+
+### `GET /api/products/{id}/availability` — Disponibilité d'un produit en boutique
+
+Question inverse du stock : **dans quelles boutiques**, et — si l'on fournit une
+position — **lesquelles près de moi**, ce produit est-il disponible ? C'est la
+fonctionnalité *find in store* du retail, qui croise catalogue, stock et
+géolocalisation en une lecture. Le produit est une **ressource** : un `{id}` non
+conforme à un UUID **ou** un produit inexistant renvoie `404`. Seules les
+boutiques `open` où le produit est **en stock** (`quantity > 0`) sont remontées.
+
+Paramètres en plus de la [pagination](#pagination) — mêmes règles géo que
+`GET /api/shops` :
+
+| Param    | Défaut | Description                                                |
+| -------- | ------ | ---------------------------------------------------------- |
+| `lat`    | —      | Latitude du centre de recherche, bornée à `[-90, 90]`.    |
+| `lng`    | —      | Longitude du centre de recherche, bornée à `[-180, 180]`. |
+| `radius` | —      | Rayon de recherche **en mètres** (> 0).                    |
+
+- `lat`, `lng`, `radius` forment un **trio tout-ou-rien** : fournir l'un sans les
+  autres renvoie `422`.
+- **Sans géolocalisation** → toutes les boutiques stockant le produit, triées par
+  nom ; `distance` vaut `null`.
+- **Avec géolocalisation** → seules les boutiques **dans le rayon**, triées de la
+  **plus proche à la plus éloignée**, chacune avec sa `distance` (en mètres).
+
+```http
+GET /api/products/019f0f3c-ea98-7727-9d42-f4724f489ff4/availability?lat=48.8530&lng=2.3499&radius=8000
+```
+
+**`200 OK`** — vue **centrée boutique** (le produit est dans l'URL) :
+
+```json
+{
+  "items": [
+    {
+      "shopId": "019f0fbb-99fe-790a-9ef8-415b9d7d7e22",
+      "shopName": "Paris Marais",
+      "address": "12 rue de Rivoli, 75004 Paris",
+      "latitude": 48.8559,
+      "longitude": 2.3601,
+      "status": "open",
+      "quantity": 12,
+      "distance": 812.95
+    }
+  ],
+  "page": 1,
+  "limit": 20,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+**Erreurs** :
+
+- `422` (trio géo incomplet, coordonnées hors bornes, `radius` ≤ 0, `page`/`limit`
+  invalides).
+- `404` (`{id}` non conforme à un UUID, ou produit inexistant).

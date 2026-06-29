@@ -28,7 +28,9 @@ ST_Distance_Sphere(POINT(longitude, latitude), POINT(:lng, :lat))
 - Le centre et le rayon de recherche sont portés par un Value Object
   **`SearchArea`** (`Coordinates` + rayon en mètres) qui rend l'état illégal
   « centre sans rayon » **non représentable** et garantit ses invariants (bornes
-  des coordonnées, rayon > 0).
+  des coordonnées, rayon > 0). *(Ces deux VO ont depuis été promus dans
+  `Shared\Domain` lorsqu'un second consommateur géo est apparu, cf.
+  [ADR 9](0009-disponibilite-produit-vo-geo-partages.md).)*
 - Géolocalisation **optionnelle** : sans elle, tri par nom et `distance` à `null`.
 - Les boutiques `closed` sont exclues de cette recherche.
 

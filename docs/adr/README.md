@@ -20,3 +20,4 @@ chaque décision précède la fonctionnalité qui l'applique.
 | [0006](0006-recherche-geo-sql-natif.md) | Recherche géographique via `ST_Distance_Sphere` (SQL natif) | 2026-06-27 | accepté |
 | [0007](0007-stock-agregat-upsert.md) | `Stock`, agrégat indépendant ; écriture en upsert par couple | 2026-06-28 | accepté |
 | [0008](0008-ports-existence-intermodule.md) | Ports d'existence inter-module (couplage limité au schéma) | 2026-06-28 | accepté |
+| [0009](0009-disponibilite-produit-vo-geo-partages.md) | VO géo dans `Shared\Domain` ; lecture cross-module (disponibilité produit) | 2026-06-30 | accepté |
