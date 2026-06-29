@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (PHPUnit)
+    runs-on: ubuntu-latest
+
+    # The geo search relies on MySQL-native features (ST_Distance_Sphere,
+    # collation utf8mb4_0900_ai_ci), so a real MySQL 8 is required — SQLite
+    # would not exercise the same code paths.
+    services:
+      db:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: shop_network_test
+          MYSQL_USER: app
+          MYSQL_PASSWORD: app
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: "mysql://app:app@127.0.0.1:3306/shop_network?serverVersion=8.4.0&charset=utf8mb4"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql, intl, mbstring
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --no-scripts
+
+      - name: Prepare the test database
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:migrations:migrate --env=test --no-interaction --allow-no-migration
+
+      - name: Run the test suite
+        run: vendor/bin/phpunit
+
+  static-analysis:
+    name: Static analysis & code style
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql, intl, mbstring
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --no-scripts
+
+      - name: Warm up the cache
+        run: php bin/console cache:warmup
+
+      - name: PHPStan (level 8)
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      - name: PHP-CS-Fixer (dry-run)
+        env:
+          PHP_CS_FIXER_IGNORE_ENV: 1
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Deptrac (hexagonal layers)
+        run: vendor/bin/deptrac --no-progress
