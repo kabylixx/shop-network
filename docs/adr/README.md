@@ -20,3 +20,4 @@ feature that applies it.
 | [0006](0006-native-sql-geo-search.md) | Geographic search via `ST_Distance_Sphere` (native SQL) | 2026-06-27 | accepted |
 | [0007](0007-stock-aggregate-upsert.md) | `Stock`, an independent aggregate; write as upsert by pair | 2026-06-28 | accepted |
 | [0008](0008-cross-module-existence-ports.md) | Cross-module existence ports (coupling limited to the schema) | 2026-06-28 | accepted |
+| [0009](0009-product-availability-shared-geo-vo.md) | Geo VO in `Shared\Domain`; cross-module read (product availability) | 2026-06-30 | accepted |

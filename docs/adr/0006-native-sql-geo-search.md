@@ -29,7 +29,9 @@ ST_Distance_Sphere(POINT(longitude, latitude), POINT(:lng, :lat))
 - The search center and radius are carried by a value object (VO)
   **`SearchArea`** (`Coordinates` + radius in meters), which makes the illegal
   state "center without radius" **non-representable** and guarantees its
-  invariants (coordinate bounds, radius > 0).
+  invariants (coordinate bounds, radius > 0). *(Both VOs have since been promoted
+  into `Shared\Domain` once a second geo consumer appeared, see
+  [ADR 9](0009-product-availability-shared-geo-vo.md).)*
 - Geolocation is **optional**: without it, sorting is by name and `distance` is
   `null`.
 - `closed` shops are excluded from this search.
