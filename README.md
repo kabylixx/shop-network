@@ -338,6 +338,58 @@ Content-Type: application/json
 
 La validation prime sur l'existence (même règle que la création de boutique).
 
+### `GET /api/stock` — Afficher le stock par boutique(s)
+
+Liste paginée du stock, **ventilé par boutique** : une ligne par couple
+`(boutique, produit)`, jamais sommée. Chaque ligne porte les informations produit
+(nom, photo) jointes depuis le catalogue.
+
+**Paramètres de requête** (tous optionnels)
+
+| Param               | Défaut  | Description                                                       |
+| ------------------- | ------- | ----------------------------------------------------------------- |
+| `shopIds`           | —       | UUID de boutiques séparés par des virgules ; omis = toutes.       |
+| `includeOutOfStock` | `false` | `true` pour inclure les ruptures (`quantity = 0`).                |
+| `page`              | `1`     | Numéro de page (≥ 1).                                             |
+| `limit`             | `20`    | Taille de page (1 à 100).                                         |
+
+- Filtre **multi-boutiques** : `shopIds=<uuid>,<uuid>`. C'est un filtre
+  **tolérant** : une boutique inconnue ne matche simplement rien (pas de `404`),
+  comme un `WHERE shop_id IN (...)`.
+- Les ruptures (`quantity = 0`) sont **exclues par défaut** ; `includeOutOfStock=true`
+  les réintègre.
+
+**Requête**
+
+```http
+GET /api/stock?shopIds=019f0fbb-99d7-7004-be48-1c77a6b3f41c,019f0fbb-9a1b-71c2-be48-1c77a6b3f41c&page=1&limit=20
+```
+
+**Réponse `200 OK`**
+
+```json
+{
+  "items": [
+    {
+      "productId": "019f0fbb-99fe-790a-9ef8-415b9d7d7e22",
+      "productName": "Robe portefeuille",
+      "pictureUrl": "https://example.com/robe.jpg",
+      "shopId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c",
+      "quantity": 12
+    }
+  ],
+  "page": 1,
+  "limit": 20,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+**Erreurs** — RFC 7807 :
+
+- `422 Unprocessable Content` — un `shopIds` non conforme à un UUID, `page`/`limit`
+  invalides.
+
 ## Qualité
 
 - **Tests** : `make test` (PHPUnit ; base de test isolée par transaction via
@@ -413,6 +465,17 @@ en une requête) : le couplage se réduit au **schéma partagé** (un nom de tab
 isolé dans un adapter, sans aucune dépendance de classe entre modules. Comme pour
 le gérant, l'absence de clé étrangère est compensée par ce contrôle dans le
 handler, qui renvoie un `404` explicite au lieu d'un `500`.
+
+Côté **lecture du stock**, même CQRS-light : un port `StockFinder` (Application)
+renvoie des `StockView` (produit + boutique + quantité) sans hydrater l'agrégat.
+L'adapter fait une requête DBAL native qui **joint `stock` et `product` par nom de
+table** — comme les adapters d'existence (couplage limité au schéma, sans
+dépendance de classe Catalog). Point d'attention métier : le résultat est
+**ventilé par boutique, jamais sommé** — un produit présent dans deux boutiques
+donne deux lignes distinctes (un `GROUP BY product + SUM(quantity)` aurait été un
+contresens vis-à-vis du besoin « détail par boutique »). Le filtre `shopIds` de
+`GET /api/stock` est **tolérant** : une boutique inconnue ne matche rien, comme un
+`WHERE shop_id IN (...)`.
 
 Cette section sera complétée au fil des user stories.
 
