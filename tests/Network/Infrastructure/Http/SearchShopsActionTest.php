@@ -4,39 +4,33 @@ declare(strict_types=1);
 
 namespace App\Tests\Network\Infrastructure\Http;
 
-use App\Network\Domain\Manager;
-use App\Network\Domain\ManagerId;
-use App\Network\Domain\Shop;
-use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopStatus;
 use App\Shared\Domain\Coordinates;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Tests\Support\CreatesEntities;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class SearchShopsActionTest extends WebTestCase
 {
+    use CreatesEntities;
+
     private const float PARIS_LAT = 48.8566;
     private const float PARIS_LNG = 2.3522;
 
     private KernelBrowser $client;
-    private EntityManagerInterface $entityManager;
-    private ManagerId $managerId;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->managerId = $this->persistManager();
     }
 
     public function testItListsOpenShopsSortedByNameWithoutGeolocation(): void
     {
         // Arrange
-        $this->createShop('Lyon', 45.7640, 4.8357);
-        $this->createShop('Bordeaux', 44.8412, -0.5805);
-        $this->createShop('Closed shop', self::PARIS_LAT, self::PARIS_LNG, ShopStatus::Closed);
+        $this->createShop('Lyon', new Coordinates(45.7640, 4.8357));
+        $this->createShop('Bordeaux', new Coordinates(44.8412, -0.5805));
+        $this->createShop('Closed shop', new Coordinates(self::PARIS_LAT, self::PARIS_LNG), ShopStatus::Closed);
 
         // Act
         $data = $this->searchShops('');
@@ -51,8 +45,8 @@ final class SearchShopsActionTest extends WebTestCase
     public function testItSortsByDistanceAndReturnsItInMeters(): void
     {
         // Arrange
-        $this->createShop('Lyon', 45.7640, 4.8357); // ~392 km from Paris
-        $this->createShop('Versailles', 48.8014, 2.1301); // ~17 km from Paris
+        $this->createShop('Lyon', new Coordinates(45.7640, 4.8357)); // ~392 km from Paris
+        $this->createShop('Versailles', new Coordinates(48.8014, 2.1301)); // ~17 km from Paris
 
         // Act
         $data = $this->searchShops(\sprintf('lat=%s&lng=%s&radius=500000', self::PARIS_LAT, self::PARIS_LNG));
@@ -66,8 +60,8 @@ final class SearchShopsActionTest extends WebTestCase
     public function testItExcludesShopsOutsideTheRadius(): void
     {
         // Arrange
-        $this->createShop('Versailles', 48.8014, 2.1301); // ~17 km
-        $this->createShop('Lyon', 45.7640, 4.8357); // ~392 km
+        $this->createShop('Versailles', new Coordinates(48.8014, 2.1301)); // ~17 km
+        $this->createShop('Lyon', new Coordinates(45.7640, 4.8357)); // ~392 km
 
         // Act
         $data = $this->searchShops(\sprintf('lat=%s&lng=%s&radius=50000', self::PARIS_LAT, self::PARIS_LNG));
@@ -81,9 +75,9 @@ final class SearchShopsActionTest extends WebTestCase
     public function testItCombinesNameAndGeolocation(): void
     {
         // Arrange
-        $this->createShop('Sézane Versailles', 48.8014, 2.1301); // matches name, in radius
-        $this->createShop('Sézane Lyon', 45.7640, 4.8357); // matches name, out of radius
-        $this->createShop('Autre Versailles', 48.8014, 2.1301); // in radius, name mismatch
+        $this->createShop('Sézane Versailles', new Coordinates(48.8014, 2.1301)); // matches name, in radius
+        $this->createShop('Sézane Lyon', new Coordinates(45.7640, 4.8357)); // matches name, out of radius
+        $this->createShop('Autre Versailles', new Coordinates(48.8014, 2.1301)); // in radius, name mismatch
 
         // Act
         $data = 'sézane'
@@ -99,9 +93,9 @@ final class SearchShopsActionTest extends WebTestCase
     public function testItPaginatesTheResults(): void
     {
         // Arrange
-        $this->createShop('Alpha', 48.0, 2.0);
-        $this->createShop('Bravo', 48.0, 2.0);
-        $this->createShop('Charlie', 48.0, 2.0);
+        $this->createShop('Alpha', new Coordinates(48.0, 2.0));
+        $this->createShop('Bravo', new Coordinates(48.0, 2.0));
+        $this->createShop('Charlie', new Coordinates(48.0, 2.0));
 
         // Act
         $data = $this->searchShops('page=2&limit=2');
@@ -157,28 +151,6 @@ final class SearchShopsActionTest extends WebTestCase
         yield 'page below 1' => ['page=0', ['page' => 'The page must be a positive integer.']];
         yield 'limit above cap' => ['limit=999', ['limit' => 'The limit must be between 1 and 100.']];
         yield 'search too long' => ['search='.str_repeat('a', 256), ['search' => 'The search term must not exceed 255 characters.']];
-    }
-
-    private function persistManager(): ManagerId
-    {
-        $id = ManagerId::generate();
-        $this->entityManager->persist(Manager::create($id, 'Test Manager'));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createShop(string $name, float $latitude, float $longitude, ShopStatus $status = ShopStatus::Open): void
-    {
-        $this->entityManager->persist(Shop::create(
-            ShopId::generate(),
-            $name,
-            'Some address',
-            new Coordinates($latitude, $longitude),
-            $this->managerId,
-            $status,
-        ));
-        $this->entityManager->flush();
     }
 
     /**

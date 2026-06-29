@@ -4,33 +4,22 @@ declare(strict_types=1);
 
 namespace App\Tests\Inventory\Infrastructure\Http;
 
-use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductId;
-use App\Inventory\Domain\Quantity;
-use App\Inventory\Domain\Stock;
-use App\Inventory\Domain\StockId;
 use App\Inventory\Domain\StockRepository;
-use App\Network\Domain\Manager;
-use App\Network\Domain\ManagerId;
-use App\Network\Domain\Shop;
 use App\Network\Domain\ShopId;
-use App\Network\Domain\ShopStatus;
-use App\Shared\Domain\Coordinates;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Tests\Support\CreatesEntities;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class SetStockActionTest extends WebTestCase
 {
+    use CreatesEntities;
+
     private KernelBrowser $client;
-    private EntityManagerInterface $entityManager;
-    private ManagerId $managerId;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->managerId = $this->persistManager();
     }
 
     public function testItCreatesStockLinesForNewCouples(): void
@@ -160,48 +149,6 @@ final class SetStockActionTest extends WebTestCase
 
         // Assert
         self::assertResponseStatusCodeSame(404);
-    }
-
-    private function persistManager(): ManagerId
-    {
-        $id = ManagerId::generate();
-        $this->entityManager->persist(Manager::create($id, 'Test Manager'));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createProduct(): ProductId
-    {
-        $id = ProductId::generate();
-        $this->entityManager->persist(Product::create($id, 'A product', 'https://example.com/p.jpg'));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createShop(string $name): ShopId
-    {
-        $id = ShopId::generate();
-        $this->entityManager->persist(Shop::create(
-            $id,
-            $name,
-            'Some address',
-            new Coordinates(48.8566, 2.3522),
-            $this->managerId,
-            ShopStatus::Open,
-        ));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createStock(ProductId $productId, ShopId $shopId, int $quantity): void
-    {
-        $this->entityManager->persist(
-            Stock::create(StockId::generate(), $productId, $shopId, new Quantity($quantity)),
-        );
-        $this->entityManager->flush();
     }
 
     /**

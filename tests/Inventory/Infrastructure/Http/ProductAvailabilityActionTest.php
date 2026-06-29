@@ -4,36 +4,26 @@ declare(strict_types=1);
 
 namespace App\Tests\Inventory\Infrastructure\Http;
 
-use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductId;
-use App\Inventory\Domain\Quantity;
-use App\Inventory\Domain\Stock;
-use App\Inventory\Domain\StockId;
-use App\Network\Domain\Manager;
-use App\Network\Domain\ManagerId;
-use App\Network\Domain\Shop;
-use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopStatus;
 use App\Shared\Domain\Coordinates;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Tests\Support\CreatesEntities;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class ProductAvailabilityActionTest extends WebTestCase
 {
+    use CreatesEntities;
+
     // Paris (Notre-Dame) — the search center used by the geolocated cases.
     private const float CENTER_LAT = 48.8530;
     private const float CENTER_LNG = 2.3499;
 
     private KernelBrowser $client;
-    private EntityManagerInterface $entityManager;
-    private ManagerId $managerId;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->managerId = $this->createManager();
     }
 
     public function testItListsOpenShopsStockingTheProductSortedByName(): void
@@ -130,9 +120,9 @@ final class ProductAvailabilityActionTest extends WebTestCase
     {
         // Arrange
         $dress = $this->createProduct('A dress');
-        $near = $this->createShop('Near shop', 48.8559, 2.3601);   // ~700 m from center
-        $mid = $this->createShop('Mid shop', 48.8738, 2.2950);     // ~5 km from center
-        $far = $this->createShop('Far shop', 45.7640, 4.8357);     // Lyon, ~390 km
+        $near = $this->createShop('Near shop', new Coordinates(48.8559, 2.3601)); // ~700 m from center
+        $mid = $this->createShop('Mid shop', new Coordinates(48.8738, 2.2950));   // ~5 km from center
+        $far = $this->createShop('Far shop', new Coordinates(45.7640, 4.8357));   // Lyon, ~390 km
         $this->createStock($dress, $mid, 1);
         $this->createStock($dress, $near, 1);
         $this->createStock($dress, $far, 1);
@@ -187,52 +177,6 @@ final class ProductAvailabilityActionTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         self::assertResponseHeaderSame('Content-Type', 'application/problem+json');
         self::assertSame(422, $data['status']);
-    }
-
-    private function createManager(): ManagerId
-    {
-        $id = ManagerId::generate();
-        $this->entityManager->persist(Manager::create($id, 'Test Manager'));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createProduct(string $name): ProductId
-    {
-        $id = ProductId::generate();
-        $this->entityManager->persist(Product::create($id, $name, 'https://example.com/p.jpg'));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createShop(
-        string $name,
-        float $latitude = self::CENTER_LAT,
-        float $longitude = self::CENTER_LNG,
-        ShopStatus $status = ShopStatus::Open,
-    ): ShopId {
-        $id = ShopId::generate();
-        $this->entityManager->persist(Shop::create(
-            $id,
-            $name,
-            'Some address',
-            new Coordinates($latitude, $longitude),
-            $this->managerId,
-            $status,
-        ));
-        $this->entityManager->flush();
-
-        return $id;
-    }
-
-    private function createStock(ProductId $productId, ShopId $shopId, int $quantity): void
-    {
-        $this->entityManager->persist(
-            Stock::create(StockId::generate(), $productId, $shopId, new Quantity($quantity)),
-        );
-        $this->entityManager->flush();
     }
 
     /**
