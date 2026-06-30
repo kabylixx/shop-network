@@ -4,17 +4,8 @@ declare(strict_types=1);
 
 namespace App\Inventory\Domain;
 
-use App\Catalog\Domain\ProductId;
-
 interface StockRepository
 {
-    /**
-     * Existing stock lines for a product, across every shop.
-     *
-     * @return Stock[]
-     */
-    public function findAllForProduct(ProductId $productId): array;
-
     /**
      * Atomically upserts the given stock lines by their (shop, product) couple,
      * in a single statement: an existing couple has its quantity replaced, a new
