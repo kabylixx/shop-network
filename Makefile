@@ -3,7 +3,7 @@ EXEC = $(DC) exec app
 PHP  = $(EXEC) php bin/console
 
 .DEFAULT_GOAL := help
-.PHONY: help start demo up down build install migrate fixtures test test-unit test-functional test-db clear-cache clear-testcache sh
+.PHONY: help start start-and-seed up down build install migrate seed test test-unit test-functional create-test-db clear-cache clear-testcache api-demo sh
 
 help: ## List the available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -11,7 +11,7 @@ help: ## List the available commands
 start: up install migrate ## One-command startup: build + up + install + migrate
 	@echo "✅ Stack ready: http://localhost:8080"
 
-demo: start fixtures ## One-command startup with demo data (start + fixtures)
+start-and-seed: start seed ## One-command startup with seeded demo data (start + seed)
 	@echo "✅ Stack ready with demo data: http://localhost:8080"
 
 up: ## Start the stack (build if needed)
@@ -29,7 +29,7 @@ install: ## Install Composer dependencies inside the container
 migrate: ## Run Doctrine migrations
 	$(PHP) doctrine:migrations:migrate --no-interaction --allow-no-migration
 
-fixtures: ## Load demo fixtures
+seed: ## Seed the database with demo data (catalog, shops, stock)
 	$(PHP) doctrine:fixtures:load --no-interaction
 
 clear-cache: ## Clear the Symfony cache (dev)
@@ -38,18 +38,21 @@ clear-cache: ## Clear the Symfony cache (dev)
 clear-testcache: ## Clear the Symfony cache (test)
 	$(PHP) cache:clear --env=test
 
-test-db: ## Create the test database schema
+create-test-db: ## Create the test database schema
 	$(PHP) doctrine:database:create --env=test --if-not-exists --no-interaction
 	$(PHP) doctrine:migrations:migrate --env=test --no-interaction --allow-no-migration
 
-test: test-db ## Run the PHPUnit test suite (prepares the test DB first)
+test: create-test-db ## Run the PHPUnit test suite (prepares the test DB first)
 	$(EXEC) vendor/bin/phpunit
 
 test-unit: ## Run only the unit tests (no DB, fast)
 	$(EXEC) vendor/bin/phpunit --group unit
 
-test-functional: test-db ## Run only the functional tests (prepares the test DB first)
+test-functional: create-test-db ## Run only the functional tests (prepares the test DB first)
 	$(EXEC) vendor/bin/phpunit --group functional
+
+api-demo: ## Run a full API scenario (curl) against the running stack at :8080
+	@bash bin/api-demo.sh
 
 sh: ## Open a shell inside the application container
 	$(EXEC) sh

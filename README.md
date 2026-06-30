@@ -28,7 +28,7 @@ business needs.
 Prerequisites: Docker + Docker Compose.
 
 ```bash
-make demo
+make start-and-seed
 ```
 
 This command builds the image, brings up the stack (FrankenPHP + MySQL), installs
@@ -36,17 +36,20 @@ the dependencies, applies the migrations **and loads the demo data**
 (catalog, shop network, stock). The API is then available,
 ready to explore, at <http://localhost:8080>.
 
-> `make start` does the same thing **without** the fixtures: it's the idempotent
-> day-to-day startup (a restart does not wipe the database). `make demo`
-> adds the (destructive) loading of demo data on top.
+> `make start` does the same thing **without** seeding: it's the idempotent
+> day-to-day startup (a restart does not wipe the database). `make start-and-seed`
+> adds the (destructive) demo-data seeding on top.
 
 | Command                | Effect                                                     |
 | ---------------------- | ---------------------------------------------------------- |
-| `make demo`            | Full startup **with** demo data (start + fixtures)         |
+| `make start-and-seed`  | Full startup **with** seeded demo data (start + seed)      |
 | `make start`           | Build + up + install + migrate (no fixtures, idempotent)   |
 | `make test`            | Prepares the test database then runs the PHPUnit suite     |
+| `make test-unit`       | Runs only the unit tests (no DB, fast)                     |
+| `make test-functional` | Runs only the functional tests (prepares the test DB)      |
+| `make api-demo`        | Runs a full API scenario (curl) against the running stack  |
 | `make migrate`         | Applies the Doctrine migrations                            |
-| `make fixtures`        | (Re)loads the demo data (catalog, shops, stock)            |
+| `make seed`            | (Re)seeds the database with demo data (catalog, shops, stock) |
 | `make clear-cache`     | Clears the Symfony cache (dev env)                         |
 | `make clear-testcache` | Clears the Symfony cache (test env)                        |
 | `make down`            | Stops and removes the containers                           |
@@ -71,6 +74,11 @@ parameters, codes, request/response examples) is in the **[API reference](docs/a
 | `GET` | `/api/products/{id}/availability` | Availability of a product in shops (name + geolocation) |
 
 → **Full detail: [`docs/api.md`](docs/api.md)**
+
+**Try it quickly** — with the stack up (`make start` is enough): `make api-demo` runs a full
+end-to-end scenario via curl — it **creates its own data**, then exercises every endpoint. Or open
+[`docs/api-examples.http`](docs/api-examples.http) in your IDE (PhpStorm / VS Code REST Client) and
+run the requests top to bottom.
 
 ## Quality
 
