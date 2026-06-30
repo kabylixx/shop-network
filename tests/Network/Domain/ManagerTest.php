@@ -6,8 +6,10 @@ namespace App\Tests\Network\Domain;
 
 use App\Network\Domain\Manager;
 use App\Network\Domain\ManagerId;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('unit')]
 final class ManagerTest extends TestCase
 {
     public function testItCreatesAManagerWithAValidName(): void

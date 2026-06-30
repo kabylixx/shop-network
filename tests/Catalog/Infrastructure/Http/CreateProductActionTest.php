@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Catalog\Infrastructure\Http;
 
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[Group('functional')]
 final class CreateProductActionTest extends WebTestCase
 {
     private KernelBrowser $client;

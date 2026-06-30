@@ -3,10 +3,10 @@ EXEC = $(DC) exec app
 PHP  = $(EXEC) php bin/console
 
 .DEFAULT_GOAL := help
-.PHONY: help start demo up down build install migrate fixtures test test-db clear-cache clear-testcache sh
+.PHONY: help start demo up down build install migrate fixtures test test-unit test-functional test-db clear-cache clear-testcache sh
 
 help: ## List the available commands
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 start: up install migrate ## One-command startup: build + up + install + migrate
 	@echo "✅ Stack ready: http://localhost:8080"
@@ -44,6 +44,12 @@ test-db: ## Create the test database schema
 
 test: test-db ## Run the PHPUnit test suite (prepares the test DB first)
 	$(EXEC) vendor/bin/phpunit
+
+test-unit: ## Run only the unit tests (no DB, fast)
+	$(EXEC) vendor/bin/phpunit --group unit
+
+test-functional: test-db ## Run only the functional tests (prepares the test DB first)
+	$(EXEC) vendor/bin/phpunit --group functional
 
 sh: ## Open a shell inside the application container
 	$(EXEC) sh

@@ -6,10 +6,12 @@ namespace App\Tests\Catalog\Infrastructure\Http;
 
 use App\Catalog\Infrastructure\Http\CreateProductRequest;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[Group('unit')]
 final class CreateProductRequestTest extends TestCase
 {
     private ValidatorInterface $validator;

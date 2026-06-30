@@ -12,8 +12,10 @@ use App\Shared\Application\Pagination;
 use App\Shared\Domain\Coordinates;
 use App\Shared\Domain\SearchArea;
 use App\Tests\Support\CreatesEntities;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
+#[Group('functional')]
 final class DoctrineShopFinderTest extends KernelTestCase
 {
     use CreatesEntities;

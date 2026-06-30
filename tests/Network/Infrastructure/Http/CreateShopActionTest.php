@@ -7,10 +7,12 @@ namespace App\Tests\Network\Infrastructure\Http;
 use App\Network\Domain\Manager;
 use App\Network\Domain\ManagerId;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[Group('functional')]
 final class CreateShopActionTest extends WebTestCase
 {
     private KernelBrowser $client;

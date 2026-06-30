@@ -6,8 +6,10 @@ namespace App\Tests\Shared\Domain;
 
 use App\Shared\Domain\Coordinates;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('unit')]
 final class CoordinatesTest extends TestCase
 {
     public function testItAcceptsCoordinatesWithinRange(): void

@@ -9,8 +9,10 @@ use App\Network\Domain\Shop;
 use App\Network\Domain\ShopId;
 use App\Network\Domain\ShopStatus;
 use App\Shared\Domain\Coordinates;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('unit')]
 final class ShopTest extends TestCase
 {
     public function testItCreatesAShopWithAValidName(): void

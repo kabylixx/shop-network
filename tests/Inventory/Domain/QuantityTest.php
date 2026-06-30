@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Inventory\Domain;
 
 use App\Inventory\Domain\Quantity;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('unit')]
 final class QuantityTest extends TestCase
 {
     public function testItAcceptsZeroAsAReferencedOutOfStockProduct(): void

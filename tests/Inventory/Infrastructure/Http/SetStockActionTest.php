@@ -8,10 +8,12 @@ use App\Catalog\Domain\ProductId;
 use App\Network\Domain\ShopId;
 use App\Tests\Support\CreatesEntities;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[Group('functional')]
 final class SetStockActionTest extends WebTestCase
 {
     use CreatesEntities;

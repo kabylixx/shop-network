@@ -7,8 +7,10 @@ namespace App\Tests\Shared\Application;
 use App\Shared\Application\Paginated;
 use App\Shared\Application\Pagination;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('unit')]
 final class PaginatedTest extends TestCase
 {
     #[DataProvider('totalPagesCases')]
