@@ -8,9 +8,11 @@ use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductId;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+#[Group('functional')]
 final class ListProductsActionTest extends WebTestCase
 {
     private KernelBrowser $client;

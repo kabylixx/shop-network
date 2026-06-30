@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Catalog\Domain;
 
 use App\Catalog\Domain\ProductId;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[Group('unit')]
 final class ProductIdTest extends TestCase
 {
     public function testItGeneratesAValidUuid(): void

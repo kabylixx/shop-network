@@ -8,9 +8,11 @@ use App\Network\Domain\ShopStatus;
 use App\Shared\Domain\Coordinates;
 use App\Tests\Support\CreatesEntities;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+#[Group('functional')]
 final class SearchShopsActionTest extends WebTestCase
 {
     use CreatesEntities;

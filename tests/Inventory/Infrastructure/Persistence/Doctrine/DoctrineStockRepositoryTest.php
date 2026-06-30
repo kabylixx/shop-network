@@ -11,9 +11,11 @@ use App\Inventory\Domain\StockId;
 use App\Inventory\Domain\StockRepository;
 use App\Network\Domain\ShopId;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[Group('functional')]
 final class DoctrineStockRepositoryTest extends KernelTestCase
 {
     private StockRepository $repository;

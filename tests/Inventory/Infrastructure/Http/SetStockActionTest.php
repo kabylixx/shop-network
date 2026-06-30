@@ -8,10 +8,12 @@ use App\Catalog\Domain\ProductId;
 use App\Network\Domain\ShopId;
 use App\Tests\Support\CreatesEntities;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[Group('functional')]
 final class SetStockActionTest extends WebTestCase
 {
     use CreatesEntities;
@@ -109,6 +111,34 @@ final class SetStockActionTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         $messagesByPath = array_column($data['violations'], 'message', 'propertyPath');
         self::assertSame('Each shop must appear at most once.', $messagesByPath['lines[1].shopId']);
+    }
+
+    public function testItRejectsAnEmptyPayload(): void
+    {
+        // Act
+        $data = $this->setStock((string) ProductId::generate(), []);
+
+        // Assert
+        self::assertResponseStatusCodeSame(422);
+        $messagesByPath = array_column($data['violations'], 'message', 'propertyPath');
+        self::assertSame('At least one stock line is required.', $messagesByPath['lines']);
+    }
+
+    public function testItRejectsMoreThanOneHundredLines(): void
+    {
+        // Arrange — 101 lines, over the cap
+        $lines = [];
+        for ($i = 0; $i < 101; ++$i) {
+            $lines[] = ['shopId' => (string) ShopId::generate(), 'quantity' => 1];
+        }
+
+        // Act
+        $data = $this->setStock((string) ProductId::generate(), $lines);
+
+        // Assert
+        self::assertResponseStatusCodeSame(422);
+        $messagesByPath = array_column($data['violations'], 'message', 'propertyPath');
+        self::assertSame('A request cannot set more than 100 stock lines.', $messagesByPath['lines']);
     }
 
     public function testItReturns404WhenTheProductDoesNotExist(): void

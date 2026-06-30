@@ -6,9 +6,11 @@ namespace App\Tests\Inventory\Infrastructure\Http;
 
 use App\Network\Domain\ShopId;
 use App\Tests\Support\CreatesEntities;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+#[Group('functional')]
 final class ListStockActionTest extends WebTestCase
 {
     use CreatesEntities;

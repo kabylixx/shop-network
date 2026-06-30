@@ -13,6 +13,12 @@ final class SetStockRequest
      * @param StockLineRequest[] $lines
      */
     public function __construct(
+        #[Assert\Count(
+            min: 1,
+            max: 100,
+            minMessage: 'At least one stock line is required.',
+            maxMessage: 'A request cannot set more than {{ limit }} stock lines.',
+        )]
         #[Assert\Valid]
         public array $lines = [],
     ) {

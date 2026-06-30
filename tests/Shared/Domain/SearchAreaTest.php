@@ -7,8 +7,10 @@ namespace App\Tests\Shared\Domain;
 use App\Shared\Domain\Coordinates;
 use App\Shared\Domain\SearchArea;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('unit')]
 final class SearchAreaTest extends TestCase
 {
     public function testItHoldsItsCenterAndRadius(): void
