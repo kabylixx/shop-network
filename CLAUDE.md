@@ -58,7 +58,7 @@ Tests mirror `src/` under `tests/`.
 
 | Command | Effect |
 | --- | --- |
-| `make demo` | Full startup with demo data |
+| `make start-and-seed` | Full startup with demo data (start + seed) |
 | `make start` | Build + up + install + migrate |
 | `make test` | Full PHPUnit suite (prepares the test DB) |
 | `make test-unit` | Unit tests only — `#[Group('unit')]`, no DB, fast |
