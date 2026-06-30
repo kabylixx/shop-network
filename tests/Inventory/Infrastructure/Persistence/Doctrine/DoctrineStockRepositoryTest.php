@@ -12,6 +12,7 @@ use App\Inventory\Domain\StockRepository;
 use App\Network\Domain\ShopId;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Uid\Uuid;
 
 final class DoctrineStockRepositoryTest extends KernelTestCase
 {
@@ -61,13 +62,14 @@ final class DoctrineStockRepositoryTest extends KernelTestCase
      */
     private function quantitiesFor(ProductId $productId): array
     {
-        // The repository writes via raw SQL, so the EntityManager identity map
-        // must not be trusted to reflect the upsert: clear it before reading.
-        self::getContainer()->get(EntityManagerInterface::class)->clear();
+        // Read straight from the DB (not through the repository under test) to
+        // assert the upsert's effect on the actual table.
+        $rows = self::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->fetchAllAssociative('SELECT shop_id, quantity FROM stock WHERE product_id = ?', [$productId->toBinary()]);
 
         $map = [];
-        foreach ($this->repository->findAllForProduct($productId) as $stock) {
-            $map[(string) $stock->shopId()] = $stock->quantity()->value;
+        foreach ($rows as $row) {
+            $map[(string) Uuid::fromBinary((string) $row['shop_id'])] = (int) $row['quantity'];
         }
 
         return $map;

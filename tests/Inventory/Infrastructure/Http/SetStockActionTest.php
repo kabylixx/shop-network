@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Inventory\Infrastructure\Http;
 
 use App\Catalog\Domain\ProductId;
-use App\Inventory\Domain\StockRepository;
 use App\Network\Domain\ShopId;
 use App\Tests\Support\CreatesEntities;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Uid\Uuid;
 
 final class SetStockActionTest extends WebTestCase
 {
@@ -157,15 +157,14 @@ final class SetStockActionTest extends WebTestCase
      */
     private function currentStock(ProductId $productId): array
     {
-        // Stock is written via raw SQL (atomic upsert), so the EntityManager
-        // identity map may hold stale entities: clear it to read fresh from the DB.
-        $container = static::getContainer();
-        $container->get(EntityManagerInterface::class)->clear();
-        $repository = $container->get(StockRepository::class);
+        // Read straight from the DB (not through the repository) to assert the
+        // persisted state on its own terms.
+        $rows = static::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->fetchAllAssociative('SELECT shop_id, quantity FROM stock WHERE product_id = ?', [$productId->toBinary()]);
 
         $map = [];
-        foreach ($repository->findAllForProduct($productId) as $stock) {
-            $map[(string) $stock->shopId()] = $stock->quantity()->value;
+        foreach ($rows as $row) {
+            $map[(string) Uuid::fromBinary((string) $row['shop_id'])] = (int) $row['quantity'];
         }
 
         return $map;
