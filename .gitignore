@@ -29,3 +29,6 @@
 ###> qossmic/deptrac ###
 /.deptrac.cache
 ###< qossmic/deptrac ###
+
+# Claude Code — local per-developer settings (CLAUDE.md, skills and agents are shared)
+/.claude/settings.local.json
