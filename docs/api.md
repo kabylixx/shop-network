@@ -82,7 +82,7 @@ Each `violation` carries a **stable** (machine-readable) `code` and a curated
 | Field        | Required | Description                       |
 | ------------ | -------- | --------------------------------- |
 | `name`       | yes      | Product name (1 to 255).          |
-| `pictureUrl` | yes      | Photo URL (valid URL).            |
+| `pictureUrl` | yes      | Photo URL (valid URL, ≤ 2000).    |
 
 ```http
 POST /api/products
@@ -104,8 +104,8 @@ Content-Type: application/json
 }
 ```
 
-**Errors**: `422` (`name` empty/too long, `pictureUrl` missing or invalid),
-`400`.
+**Errors**: `422` (`name` empty/too long, `pictureUrl` missing, too long or not a
+valid URL), `400`.
 
 ### `GET /api/products` — List the catalog
 
@@ -137,7 +137,8 @@ GET /api/products?search=dress&sort=name&direction=desc&page=1&limit=20
 }
 ```
 
-**Errors**: `422` (`page`/`limit` out of bounds, `sort` not whitelisted).
+**Errors**: `422` (`page`/`limit` out of bounds, `search` too long, `sort` or
+`direction` not whitelisted).
 
 ## Shop network
 
@@ -203,9 +204,13 @@ Content-Type: application/json
   "latitude": 48.8566,
   "longitude": 2.3522,
   "managerId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c",
-  "status": "open"
+  "status": "open",
+  "distance": null
 }
 ```
+
+`distance` belongs to the shop representation but is only populated by the geo
+search (`GET /api/shops`); on creation it is always `null`.
 
 **Errors**: `422` (required field missing, coordinates out of bounds, `managerId`
 not a valid UUID, `status` not in the list), `404` (`managerId` valid but
@@ -330,7 +335,7 @@ GET /api/stock?shopIds=019f0fbb-99d7-7004-be48-1c77a6b3f41c,019f0fbb-9a1b-71c2-b
     {
       "productId": "019f0fbb-99fe-790a-9ef8-415b9d7d7e22",
       "productName": "Wrap dress",
-      "pictureUrl": "https://example.com/robe.jpg",
+      "pictureUrl": "https://example.com/wrap-dress.jpg",
       "shopId": "019f0fbb-99d7-7004-be48-1c77a6b3f41c",
       "quantity": 12
     }
