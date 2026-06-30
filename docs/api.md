@@ -4,6 +4,10 @@ Detailed contract for each endpoint: request body, parameters, responses,
 error codes and examples. Overview in the [README](../README.md#api); the *why*
 behind the choices is in the [ADRs](adr/).
 
+**Try it live** (stack up via `make start`): run `make api-demo` for a full end-to-end
+scenario, or open [`api-examples.http`](api-examples.http) in your IDE (PhpStorm / VS Code
+REST Client) and run the requests top to bottom.
+
 **REST / JSON** API. Cross-cutting conventions (pagination, error format) are
 factored out in [Common conventions](#common-conventions) — endpoints only
 refer to it for their specifics.

@@ -1,0 +1,58 @@
+### Shop Network — API examples
+### Run with the JetBrains HTTP Client (PhpStorm) or the VS Code REST Client.
+### Run top to bottom: the create requests capture ids into variables used by the reads.
+### Requires the stack running — `make start` is enough (these requests create their own data).
+### Default base http://localhost:8080.
+
+@base = http://localhost:8080
+
+### Create a manager
+POST {{base}}/api/managers
+Content-Type: application/json
+
+{ "name": "Jane Cooper" }
+
+> {% client.global.set("managerId", response.body.id); %}
+
+### Create a shop (Paris Marais)
+POST {{base}}/api/shops
+Content-Type: application/json
+
+{
+  "name": "Paris Marais",
+  "address": "12 rue de Rivoli, 75004 Paris",
+  "latitude": 48.8559,
+  "longitude": 2.3601,
+  "managerId": "{{managerId}}"
+}
+
+> {% client.global.set("shopId", response.body.id); %}
+
+### Create a product (in stock below)
+POST {{base}}/api/products
+Content-Type: application/json
+
+{ "name": "Wrap dress", "pictureUrl": "https://example.com/wrap-dress.jpg" }
+
+> {% client.global.set("productId", response.body.id); %}
+
+### Set this product's stock in the shop
+PUT {{base}}/api/products/{{productId}}/stock
+Content-Type: application/json
+
+[ { "shopId": "{{shopId}}", "quantity": 12 } ]
+
+### List the catalog (search by name, sorted, paginated)
+GET {{base}}/api/products?search=dress&sort=name&direction=asc&page=1&limit=20
+
+### Search shops near Paris (geolocation)
+GET {{base}}/api/shops?lat=48.8566&lng=2.3522&radius=5000&page=1&limit=20
+
+### Stock of the shop (out-of-stock excluded by default)
+GET {{base}}/api/stock?shopIds={{shopId}}
+
+### Products of the shop (shop as a resource — 404 if unknown)
+GET {{base}}/api/shops/{{shopId}}/products
+
+### Availability of the product near Paris
+GET {{base}}/api/products/{{productId}}/availability?lat=48.8566&lng=2.3522&radius=5000
