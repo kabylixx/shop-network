@@ -279,7 +279,7 @@ Updates, for a product, the available quantity in one or more shops.
 - `{id}` is the UUID of an **existing** product (an identifier that is not a
   valid UUID returns `404` at routing).
 
-**Request body** — JSON array of couples:
+**Request body** — JSON array of **1 to 100** couples:
 
 | Field      | Required | Description                                            |
 | ---------- | -------- | ------------------------------------------------------ |
@@ -305,8 +305,9 @@ Content-Type: application/json
 ]
 ```
 
-**Errors**: `422` (`quantity` < 0, `shopId` not a valid UUID, missing field, or
-the same shop repeated), `404` (unknown product or ≥ 1 unknown shop), `400`.
+**Errors**: `422` (`quantity` < 0, `shopId` not a valid UUID, missing field, the
+same shop repeated, or the array empty / over 100 lines), `404` (unknown product
+or ≥ 1 unknown shop), `400`.
 
 ### `GET /api/stock` — Show / filter stock by shop(s)
 
